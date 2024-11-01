@@ -5,8 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "postinstall": "tsc",
-    "start": "ts-node src/index.ts"
+    "postinstall": "tsc"
   },
   "engines": { "node": "22.6.0" },
   "keywords": [],
