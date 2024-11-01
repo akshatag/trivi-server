@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "heroku-postbuild": "npm run build"
   },
-  "engines": { "node": "22.x" },
+  "engines": { "node": "20.x" },
   "keywords": [],
   "author": "",
   "license": "ISC",
