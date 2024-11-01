@@ -16,7 +16,6 @@ app.use('/users', usersRoute);
 app.use('/pods', podsRoute);
 app.use('/teams', teamsRoute);
 
-const PORT = process.env.PORT || 8080;
 
 app.get('/', (req: Request, res: Response) => {
     res.send('API is running!');
@@ -33,5 +32,5 @@ process.on('SIGINT', async () => {
     process.exit(0);
   });
 
-
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
