@@ -7,65 +7,53 @@ import { pgpool } from '../utils/db';
 const router = express.Router();
 
 // Create a new user when the user first signs up. Just expects a session object in the request
-router.post('/init', async (req: Request, res: Response) => {
-  const email = req.body.email;
-  const domain = email.split('@')[1];
+router.post('/init', authenticateRequest, async (req: Request, res: Response) => {
+  console.log('INIT USER: ' + req.user.id);
 
-  const { data:teamData, error: teamError } = await supabase
-    .from('teams')
-    .select('*')    
-    .eq('domain', domain)
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', req.user.id)
     .maybeSingle();
 
-  if (teamError) {
-    console.error('Error fetching team:', teamError);
-    res.status(500).json({ message: teamError.message });
+  if (data) {
+    console.log('user exists');
+    res.status(200).json({ message: 'user exists' });
     return;
   }
 
-  if (!teamData) {
-    res.status(404).json({ message: 'Team not found' });
-    return;
-  }
-
-  let userData;
-
-  try {
-    userData = await pgpool.query(`
-        select * from auth.users where email = $1;
-    `, [email])
+  if (!data) {
     
-    userData = userData.rows[0];
-  } catch (error) {
-    console.error('Error getting user:', error);
-    res.status(500).json({ message: error });
-    return;
+    const { data: teamData, error: teamError } = await supabase
+      .from('teams')
+      .select('*')    
+      .eq('domain', req.user.email.split('@')[1])
+      .maybeSingle();
+
+    if(!teamData){
+      console.log('Team not found');
+      res.status(404).json({ message: 'Team not found' });
+      return;
+    }
+
+
+    console.log('Inserting user...');
+
+
+    const { data: insertData, error: insertError } = await supabase
+      .from('profiles')
+      .insert([{ id: req.user.id, email: req.user.email, team_id: teamData.id, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
+
+    if (insertError) {
+      console.error('Error inserting user:', insertError);
+      res.status(500).json({ message: insertError.message });
+      return;
+    } else {
+      console.log('User created successfully!');
+      res.status(201).json({ message: 'User created successfully!' });
+      return;
+    }
   }
-
-  if (!userData) {
-    res.status(404).json({ message: 'User already exists' });
-    return;
-  } 
-
-  console.log('id: ' + userData.id);
-  console.log('email: ' + userData.email);
-  console.log('teamId: ' + teamData.id);
-
-  // TODO: if there aren't other users in the team, set the role to 'TEAM_ADMIN'
-  const { data: insertData, error: insertError } = await supabase
-    .from('profiles')
-    .insert([{ id: userData.id, email: email, team_id: teamData.id, role: 'POD_MEMBER', name: email.split('@')[0] }]);
-
-  if (insertError) {
-    console.error('Error inserting user:', insertError);
-    res.status(500).json({ message: insertError.message });
-    return;
-  } else {
-    res.status(201).json({ message: 'User created successfully!' });
-    return;
-  }
-
-
 });
 
 
