@@ -7,37 +7,54 @@ import { pgpool } from '../utils/db';
 const router = express.Router();
 
 // Create a new user when the user first signs up. Just expects a session object in the request
-router.post('/init', authenticateRequest, async (req: Request, res: Response) => {
-  const domain = req.user.email.split('@')[1];
+router.post('/init', async (req: Request, res: Response) => {
+  const email = req.body.email;
+  const domain = email.split('@')[1];
 
-  const { data, error } = await supabase
+  const { data:teamData, error: teamError } = await supabase
     .from('teams')
-    .select('*')
+    .select('*')    
     .eq('domain', domain)
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    console.error('Error fetching team:', error);
-    res.status(500).json({ message: error.message });
+  if (teamError) {
+    console.error('Error fetching team:', teamError);
+    res.status(500).json({ message: teamError.message });
     return;
   }
 
-  if (!data) {
+  if (!teamData) {
     res.status(404).json({ message: 'Team not found' });
     return;
   }
 
-  const teamId = data.id; 
+  let userData;
 
-  console.log('id: ' + req.user.id);
-  console.log('email: ' + req.user.email);
-  console.log('teamId: ' + teamId);
+  try {
+    userData = await pgpool.query(`
+        select * from auth.users where email = $1;
+    `, [email])
+    
+    userData = userData.rows[0];
+  } catch (error) {
+    console.error('Error getting user:', error);
+    res.status(500).json({ message: error });
+    return;
+  }
 
+  if (!userData) {
+    res.status(404).json({ message: 'User already exists' });
+    return;
+  } 
+
+  console.log('id: ' + userData.id);
+  console.log('email: ' + userData.email);
+  console.log('teamId: ' + teamData.id);
 
   // TODO: if there aren't other users in the team, set the role to 'TEAM_ADMIN'
   const { data: insertData, error: insertError } = await supabase
     .from('profiles')
-    .insert([{ id: req.user.id, email: req.user.email, team_id: teamId, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
+    .insert([{ id: userData.id, email: email, team_id: teamData.id, role: 'POD_MEMBER', name: email.split('@')[0] }]);
 
   if (insertError) {
     console.error('Error inserting user:', insertError);
