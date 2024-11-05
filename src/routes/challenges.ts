@@ -96,7 +96,7 @@ router.get('/past', authenticateRequest, async (req: Request, res: Response) => 
       select * from
         (select id as challenge_id, challenge_question, challenge_date from challenges where challenge_date <= $1 AND team_id = $2 order by challenge_date desc) as challenges
         left join (
-          select id as response_id, challenge_id as response_challenge_id, response_text, grade_score, grade_critique
+          select id as response_id, challenge_id as response_challenge_id, response_text, grade_score, grade_critique, started_at as response_started_at
           from responses
           where user_id = $3
   ) as responses on challenges.challenge_id = responses.response_challenge_id;
@@ -315,8 +315,28 @@ router.get('/responses/:challenge_id/all', authenticateRequest, async (req: Requ
 });
 
 
+// Init a response to a challenge
+router.post('/responses/init', authenticateRequest, async (req: Request, res: Response) => {
+  const { challenge_id, response_text } = req.body;
+  const user_id = req.user.id;
+
+  const { data, error } = await supabase
+    .from('responses')
+    .insert({challenge_id, user_id, response_text})
+
+  if (error) {
+    console.error('Error fetching challenge:', error);
+    res.status(500).json({ message: error.message });
+    return;
+  } 
+
+  res.status(200).json({message: "Response initialized!"})
+  return;
+})  
+
+
 // Submit a response to a challenge
-router.post('/responses', authenticateRequest, async (req: Request, res: Response) => {
+router.put('/responses', authenticateRequest, async (req: Request, res: Response) => {
   const { challenge_id, response_text } = req.body;
   const user_id = req.user.id;
 
@@ -434,7 +454,9 @@ router.post('/responses', authenticateRequest, async (req: Request, res: Respons
 
   const { error: insertError } = await supabase
     .from('responses')
-    .insert([{ challenge_id, user_id, response_text, grade_score: grade?.score, grade_critique: grade?.critique }]);
+    .update([{ response_text, grade_score: grade?.score, grade_critique: grade?.critique }])
+    .eq('challenge_id', challenge_id)
+    .eq('user_id', user_id);
 
   if (insertError) {
     console.error('Error inserting response:', error);
