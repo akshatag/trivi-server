@@ -619,4 +619,110 @@ router.post('/responses/test', authenticateRequest, async (req: Request, res: Re
 });
 
 
+
+// Infer criteria from ideal response
+router.post('/criteria/infer', authenticateRequest, async (req: Request, res: Response) => {
+  
+  if (req.user.role != 'TEAM_ADMIN') {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
+  
+  const { challenge_question, ideal_response } = req.body;
+
+  const systemPrompt = `
+      Infer CRITERIA based on the QUESTION and the IDEAL RESPONSE. Refer to the examples below. 
+
+      --------
+
+      EXAMPLE QUESTION:
+      Suppose a customer stores their code on Github. How would you respond to the objection that, because of that fact, Codeium and Copilot have the same context-awareness. 
+
+      EXAMPLE IDEA LRESPONSE: 
+      Even though the customer may store their code on Github, Codeium's context awareness engine is superior for the following reasons. Firstly, Codeium is able to leverage context from not only local but also remote repositories. If the customer is on Github Copilot Business, they can only index a limited number of remote repositories. Second, though both Codeium and Copilot may have access to the same information, simply having access to information isn't enough to produce personalized results. The system must deeply understand your codebase. Codeium does this through its proprietary context awareness engine, which uses custom code parsers to build detailed syntax trees of every file in your remote and local repos. We also use sophisticated retrieval techniques over and above basic RAG to make sure that the most relevant context is fetched. 
+
+      INFERRED GRADING CRITERIA: 
+      - Acknowledges that because customer code is stored on Github, so Codeium and Github Copilot will have access to the same repositories
+      - Identifies the caveat that Copilot Business customers will have limited remote repositories
+      - Draws the distinction between having access to your codebase and deeply understandding
+      - Makes the case that Codeium has a superior context awareness engine.
+      - Uses custom code parsers and smart RAG techniques as evidence.
+
+      --------
+
+      EXAMPLE QUESTION:
+      Why did we build the Windsurf Editor? What does this mean for Enterprise customers? 
+
+      EXAMPLE IDEAL RESPONSE: 
+      We realized that in order to provide the best AI-native coding experience, we needed to own the underlying IDE. Today, we are reliant on the APIs that VSCode and JetBrains and such provide to us. This inherently limits how creative we can be. This is especially important as we launch AI Flows like Cascade and Supercomplete, which are new paradigms for human-AI interaction. Thus, we decided to invest in  building the Windsurf Editor. 
+
+      This doesn’t change our commitment to supporting the existing IDEs that Enterprises know and love. Tech stack compatibility is one of Codeium’s core strengths, and the team will continue to bring new features to the other IDEs. However, new features — like Cascade — will land on the Windsurf Editor first given that is the surface we have the most control over. 
+
+      INFERRED GRADING CRITERIA: 
+      - Identifies that we are limited by VS Code and JetBrains APIs
+      - Identifies that human-AI interactions will change with the introduction of AI Flows
+      - Identifies that the Windsurf Editor will give us control so we can deliver the best AI-native coding experience
+      - Notes that Codeium will continue to support the other IDEs and that it remains committed to tech stack compatibility
+      - Notes that new features will land on Windsurf first and then on other IDEs
+
+      --------
+
+      EXAMPLE QUESTION:
+      What are AI Flows? How are they different from agents? 
+
+      EXAMPLE IDEAL RESPONSE: 
+      AI Flows, like Supercomplete and Cascade, are a new class of capabilities. If you think about most Copilots today, such as Autocomplete and Chat, these are the result of combining large language models with context-awareness. Agents build on this baseline by introducing the use of "tools" -- the ability for the model to actually write code, edit code, etc. Flows are the next evolution of Agents. In addition to tools and context, they give models a deep understanding of human intent. 
+
+      Flows offer the best of both Copilots and Agents. They can be collaborative like Copilots and yet also execute certain tasks autonomously. By understanding what you are trying to do, they can be proactive rather than reactive (think Supercomplete). 
+
+      INFERRED GRADING CRITERIA: 
+      - Identifies that AI Flows are a new class of capabilities altogether, distinct from Copilots and Agents.
+      - Identifies Supercomplete and Cascade as the two new AI Flows. 
+      - Explains that Copilots only had access to models and context
+      - Explains that Agents built on Copilots with Tool use
+      - Gives a few examples of "tools" such as the ability to write and edit code
+      - Explains that Flows build on Agents and Copilots by adding an understanding of human intent
+      - Explains that their understanding of human intent allows Flows to deliver the best of both Copilot and Agents, being autonomous at times and collaborative at times. 
+
+      --------
+    `
+
+    const userPrompt = `
+      Now based on that example, provide a grading criteria based on the quesiton and ideal response. 
+
+      QUESTION: 
+      ${challenge_question}
+
+      IDEAL RESPONSE: 
+      ${ideal_response}
+      
+      GRADING CRITERIA: 
+    `
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-2024-08-06",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    });
+  
+    const criteria = completion.choices[0].message;
+  
+    res.status(200).json({ criteria });
+    return;
+  } catch (error) {
+    res.status(500).json({ message: 'Error inferring criteria:', error });
+    return;
+  }
+  
+});
+
+
+
+
+
+
+
 export default router;
