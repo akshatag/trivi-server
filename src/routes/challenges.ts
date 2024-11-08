@@ -61,6 +61,34 @@ router.put('/', authenticateRequest, async (req: Request, res: Response) => {
   res.status(201).json({ message: 'Challenge updated successfully!' });
 });
 
+// Delete a challenge
+router.delete('/:challengeId', authenticateRequest, async (req: Request, res: Response) => {
+  
+  if (req.user.role !== 'TEAM_ADMIN') {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
+
+  const challengeId = req.params.challengeId;
+
+  const { error } = await supabase
+    .from('challenges')
+    .delete()
+    .eq('id', challengeId)
+    .eq('team_id', req.user.team_id)
+
+  if (error) {
+    console.error('Error deleting challenge:', error);
+    res.status(500).json({ message: error.message });
+    return;
+  }
+
+  res.status(200).json({ message: 'Challenge deleted successfully!' });
+});
+
+
+
+
 // Get challenges for a given date range
 router.get('/questions', authenticateRequest, async (req: Request, res: Response) => {
 
