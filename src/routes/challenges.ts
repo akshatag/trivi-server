@@ -103,7 +103,7 @@ router.get('/questions', authenticateRequest, async (req: Request, res: Response
     .select('*')
     .gte('challenge_date', startDate)
     .lte('challenge_date', endDate)
-    .order('created_at', { ascending: false })
+    .order('challenge_date', { ascending: false })
 
   if (error) {
     console.error('Error getting questions:', error);
