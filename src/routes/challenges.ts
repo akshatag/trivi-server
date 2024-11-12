@@ -385,7 +385,9 @@ router.put('/responses', authenticateRequest, async (req: Request, res: Response
   }
 
   const systemPrompt = `
-      You are a technical sales coach. Given a QUESTION, an IDEAL RESPONSE, a GRADING CRITERIA, and a USER REPSONSE, your job is to provide a SCORE and a CRITIQUE. Note that some of the GRADING CRITERIA are marked as [CRITICAL] meaning they should be weighted more heavily. Others are marked as [BONUS] which means they should be weighted less heavily. Based on how well the USER RESPONSE meets the GRADING CRITERIA, produce a SCORE. The SCORE should be a number from 0 to 10, with 10 being the perfect response that meets all the GRADING CRITERIA. Finally, write a CRITIQUE of the USER RESPONSE. Make sure this CRITIQUE is conversational and concise, like a mentor to a mentee. Address the user as "you" in the CRITIQUE. Go over what the user did well first. Then explain what elements the user was missing compared to the IDEAL RESPONSE. The CRITIQUE should not take the USER RESPONSE style into account -- it should be focused on the content only. Additionally, do NOT penalize the user for including points that are not covered in the ideal response. 
+      You are a technical sales coach. Given a QUESTION, a GRADING CRITERIA, and a USER REPSONSE, your job is to provide a SCORE and a CRITIQUE. The SCORE should be a number from 0 to 10, with 10 being the perfect response that meets all the GRADING CRITERIA. The CRITIQUE should be a short, conversational response that addresses what the user did well and what elements the user was missing compared to the GRADING CRITERIA. 
+      
+      Do not reference the GRARDING CRITERIA, or USER RESPONSE in your CRTIQUE. Address the user as "you" in the CRITIQUE. The CRITIQUE should not take the USER RESPONSE style into account -- it should be focused on the content only. Additionally, do not penalize the user for including points that are not covered in the GRADING CRITERIA. Also, do not be picky about specific phrasing or wording as long as the answer broadly meets the GRADING CRITERIA. And go easy, generally if the user has written a paragraph and tried in earnest, give them at least a 5. Reserve low scores (0-3) for answers that are clearly off topic or only 1 sentence. 
 
       Use the example below as a guide.
 
@@ -394,21 +396,14 @@ router.put('/responses', authenticateRequest, async (req: Request, res: Response
       EXAMPLE QUESTION:
       Suppose a customer asks you, "What model does Codeium use?". This customer is also considering using Github Copilot. How would you respond to this? 
 
-      EXAMPLE IDEALRESPONSE: 
-      Codeium offers a combination of models that we have trained or fine-tuned in-house as well as third-party models. We even allow you to bring your own OpenAI compatible endpoint. Our philosophy is that we are not dogmatic about the models you use; we want to make sure you have access to the best model for each specific task. For autocomplete, for instance, we believe our in-house model is state of the art. We have trained it from the ground up specifically for the autocomplete use case, focusing on low-latency and capabilities like inline-FIM. For Chat, on the other hand, we give you the ability to choose between our in-house and third party models.
-
-      Given how quickly the space moves, model optionality is critical to make sure that you always have access to the best tools for each task. This gives you the confidence that now and into the future, you'll get access to the best models through Codeium. Note, Github Copilot only just introduced support for non-OpenAI models, validating the need for model optionality. Copilot still doesn't support bringing your own endpoint. Codeium continues to be a leader in this area. 
-
       EXAMPLE GRADING CRITERIA: 
-      - [CRITICAL] Automatic 0 if they talked about the number of parameters in our in-house model. Avoid talking about model size. 
-      - Identified that Codeium offers a combination of models trained in-house and third-party models. 
-      - [BONUS] Mentioned the capability to bring your own endpoint.
-      - Talked about Codeium's model philosophy: the best model for each specific task
-      - Talked about offering in-house models where we believe we have the state of the art, such as autocomplete.
-      - [BONUS] Explained that our autocomplete is state of the art because of low-latency and capabilities like inline-FIM. 
-      - Talked about the latest models that Codeium supports - GPT-4o, Claude 3.5, GPT-o1
-      - Talked about the so what: avoiding the risk of model lock-in and futureproofing their decision to go with Codeium. 
-      - [CRITICAL] Acknowledged that Github Copilot also recently introduced support for non-OpenAI models, but framed Codeium as the leader in this area. 
+      - [1] Automatic 0 if they talked about the number of parameters in our in-house model. Avoid talking about model size. 
+      - [2] Talked about Codeium's model philosophy: the best model for each specific task and identified that Codeium offers a combination of models trained in-house and third-party models. 
+      - [1] Mentioned the capability to bring your own endpoint.
+      - [1] Talked about offering in-house models where we believe we have the state of the art, such as autocomplete and explained that our autocomplete is state of the art because of low-latency and capabilities like inline-FIM. 
+      - [1] Talked about the latest models that Codeium supports - GPT-4o, Claude 3.5, GPT-o1
+      - [2]Talked about the so what: avoiding the risk of model lock-in and futureproofing their decision to go with Codeium. 
+      - [2] Acknowledged that Github Copilot also recently introduced support for non-OpenAI models, but framed Codeium as the leader in this area. 
 
       --------
 
@@ -435,22 +430,6 @@ router.put('/responses', authenticateRequest, async (req: Request, res: Response
       Great job explaining our model philosophy and why model optionality is important. You also captured that we have both in-house models and third-party models. 
 
       When talking about our in-house models, its worth explaining why we believe our in-house model is state of the art. We believe our autcomplete model's low-latency and inline-FIM capabilities make it better than anything else on the market. Another thing you missed is that we allow customers to bring their own endpoint. This shows our continued leadership in this space. 
-
-      --------
-
-      EXAMPLE USER RESPONSE #3: 
-      Codeium offers a combination of models that we have trained or fine-tuned in-house as well as third-party models. Our philosophy is that we are not dogmatic about the models you use; we want to make sure you have access to the best model for each specific task. For autocomplete, for instance, we believe our in-house model is state of the art. Our autocomplete model is 10B parameters. We have trained it from the ground up specifically for the autocomplete use case, focusing on low-latency and capabilities like inline-FIM. For Chat, on the other hand, we give you the ability to choose between our in-house and third party models.
-
-      Given how quickly the space moves, model optionality is critical to make sure that you always have access to the best tools for each task. This gives you the confidence that now and into the future, you'll get access to the best models through Codeium. Note, Github Copilot only just introduced support for non-OpenAI models, validating the need for model optionality. 
-
-      EXAMPLE SCORE #3: 0
-
-      EXAMPLE CRITIQUE #3: 
-      Remember never to mention the size or parameter count of our models. This is a critical mistake and the reason your response received a 0. Otherwise, you did a good job of explaining our model philosophy and the different models on our platform. You also did a good job of explaining why our in-house autocomplete model is state of the art. You also correctly identified that Copilot now offers non-OpenAI models. 
-
-      One thing you missed was that we allow customers to bring their own endpoint. This shows our continued leadership in this space.
-
-      --------
     `
 
     const userPrompt = `
@@ -458,9 +437,6 @@ router.put('/responses', authenticateRequest, async (req: Request, res: Response
 
       QUESTION: 
       ${data![0].challenge_question}
-
-      IDEAL RESPONSE: 
-      ${data![0].ideal_response}
       
       GRADING CRITERIA: 
       ${data![0].grading_criteria}
@@ -522,7 +498,7 @@ router.post('/responses/test', authenticateRequest, async (req: Request, res: Re
       EXAMPLE QUESTION:
       Suppose a customer asks you, "What model does Codeium use?". This customer is also considering using Github Copilot. How would you respond to this? 
 
-      EXAMPLE IDEALRESPONSE: 
+      EXAMPLE IDEAL RESPONSE: 
       Codeium offers a combination of models that we have trained or fine-tuned in-house as well as third-party models. We even allow you to bring your own OpenAI compatible endpoint. Our philosophy is that we are not dogmatic about the models you use; we want to make sure you have access to the best model for each specific task. For autocomplete, for instance, we believe our in-house model is state of the art. We have trained it from the ground up specifically for the autocomplete use case, focusing on low-latency and capabilities like inline-FIM. For Chat, on the other hand, we give you the ability to choose between our in-house and third party models.
 
       Given how quickly the space moves, model optionality is critical to make sure that you always have access to the best tools for each task. This gives you the confidence that now and into the future, you'll get access to the best models through Codeium. Note, Github Copilot only just introduced support for non-OpenAI models, validating the need for model optionality. Copilot still doesn't support bringing your own endpoint. Codeium continues to be a leader in this area. 
