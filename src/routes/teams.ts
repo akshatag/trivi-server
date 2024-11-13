@@ -7,7 +7,7 @@ import { pgpool } from '../utils/db';
 const router = express.Router();
 
 // Check if the domain the user is trying to join with exists
-router.get('/:domain', async (req: Request, res: Response) => {
+router.get('/:domain', authenticateRequest,async (req: Request, res: Response) => {
     const domain = req.params.domain;
 
     const { data, error } = await supabase
