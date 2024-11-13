@@ -770,7 +770,7 @@ router.post('/criteria/grade', authenticateRequest, async (req: Request, res: Re
 
 })
 
-router.post('/critique/humanize', authenticateRequest, async (req: Request, res: Response) => {
+router.post('/critique/humanize', async (req: Request, res: Response) => {
 
 
   const { critiques } = req.body;
