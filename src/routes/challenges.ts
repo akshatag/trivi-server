@@ -613,11 +613,6 @@ router.post('/criteria/infer', authenticateRequest, async (req: Request, res: Re
 // Convert criteria from from natural language to a structured format
 router.post('/criteria/convert', authenticateRequest, async (req: Request, res: Response) => {
 
-  if (req.user.role != 'TEAM_ADMIN') {
-    res.status(401).json({ message: 'Unauthorized' });
-    return;
-  }
-
   const { grading_criteria } = req.body;
 
   const GradeCriterion = z.object({
