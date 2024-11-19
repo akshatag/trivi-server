@@ -122,7 +122,7 @@ router.get('/past', authenticateRequest, async (req: Request, res: Response) => 
 
     const data = await pgpool.query(`
       select * from
-        (select id as challenge_id, challenge_question, grading_criteria, challenge_date from challenges where challenge_date <= $1 AND team_id = $2 order by challenge_date desc) as challenges
+        (select id as challenge_id, challenge_question, grading_criteria, challenge_date, ideal_response from challenges where challenge_date <= $1 AND team_id = $2 order by challenge_date desc) as challenges
         left join (
           select id as response_id, challenge_id as response_challenge_id, response_text, grade_score, grade_critique, started_at as response_started_at
           from responses
