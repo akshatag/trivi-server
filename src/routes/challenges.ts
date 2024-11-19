@@ -348,6 +348,23 @@ router.post('/responses/init', authenticateRequest, async (req: Request, res: Re
   const { challenge_id, response_text } = req.body;
   const user_id = req.user.id;
 
+  const { data: existingResponse, error: existingResponseError } = await supabase
+    .from('responses')
+    .select('*')
+    .eq('challenge_id', challenge_id)
+    .eq('user_id', user_id)
+
+  if (existingResponseError) {
+    console.error('Error checking if user already has a response:', existingResponseError);
+    res.status(500).json({ message: existingResponseError.message });
+    return;
+  }
+
+  if (existingResponse.length > 0) {
+    res.status(400).json({ message: 'You already have a response to this challenge' });
+    return;
+  }
+
   const { data, error } = await supabase
     .from('responses')
     .insert({ challenge_id, user_id, response_text })
