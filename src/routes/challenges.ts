@@ -250,7 +250,7 @@ router.get('/scoresByPod', authenticateRequest, async (req: Request, res: Respon
 
   try {
     const data = await pgpool.query(`
-      select SUM(responses.grade_score) as total_score, MAX(pods.name) as pod_name, pods.id as pod_id from      
+      select AVG(responses.grade_score) as total_score, MAX(pods.name) as pod_name, pods.id as pod_id from      
       ( select id, pod_id from profiles where team_id = $1 and role = 'POD_MEMBER') as profiles
       inner join 
       ( select id, name from pods where team_id = $1 ) as pods on profiles.pod_id = pods.id
