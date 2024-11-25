@@ -276,6 +276,7 @@ router.get('/scoresByPod', authenticateRequest, async (req: Request, res: Respon
 
 
 
+
 // Get users response to a particular chalenge_id
 router.get('/responses/:challenge_id', authenticateRequest, async (req: Request, res: Response) => {
 
@@ -297,6 +298,55 @@ router.get('/responses/:challenge_id', authenticateRequest, async (req: Request,
 });
 
 
+// Get list of users who have not submitted a response to a challenge
+router.get('/responses/:challenge_id/nonresponders', authenticateRequest, async (req: Request, res: Response) => {
+
+  if (req.user.role == 'POD_MEMBER') {
+    try {
+      const data = await pgpool.query(`
+        select * from
+        (select * from responses where challenge_id = $1) as responses
+        right join
+        (select * from profiles where team_id = $2 and pod_id = $3) as profiles
+        on responses.user_id = profiles.id
+        where responses.user_id is null
+      `, [req.params.challenge_id, req.user.team_id, req.user.pod_id]);
+
+      res.json(data.rows);
+      return;
+
+    } catch (error) {
+      console.error('Error getting scores:', error);
+      res.status(500).json({ message: error });
+      return;
+    }
+
+  }
+
+  if (req.user.role == 'TEAM_ADMIN') {
+    try {
+      const data = await pgpool.query(`
+        select * from 
+        (select * from responses where challenge_id = $1) as responses
+        right join
+        (select * from profiles where team_id = $2 and role = 'POD_MEMBER') as profiles
+        on responses.user_id = profiles.id
+        where responses.user_id is null
+      `, [req.params.challenge_id, req.user.team_id]);
+
+      res.json(data.rows);
+      return;
+
+    } catch (error) {
+      console.error('Error getting scores:', error);
+      res.status(500).json({ message: error });
+      return;
+    }
+  }
+
+});
+
+
 // Get all the responses for a particular challenge from users in the same pod as the user
 router.get('/responses/:challenge_id/all', authenticateRequest, async (req: Request, res: Response) => {
 
@@ -305,7 +355,7 @@ router.get('/responses/:challenge_id/all', authenticateRequest, async (req: Requ
       const data = await pgpool.query(`
         select * from
         (select * from responses where challenge_id = $1) as responses
-        right join
+        inner join
         (select * from profiles where team_id = $2 and pod_id = $3) as profiles
         on responses.user_id = profiles.id
       `, [req.params.challenge_id, req.user.team_id, req.user.pod_id]);
@@ -326,7 +376,7 @@ router.get('/responses/:challenge_id/all', authenticateRequest, async (req: Requ
       const data = await pgpool.query(`
         select * from 
         (select * from responses where challenge_id = $1) as responses
-        right join
+        inner join
         (select * from profiles where team_id = $2 and role = 'POD_MEMBER') as profiles
         on responses.user_id = profiles.id
       `, [req.params.challenge_id, req.user.team_id]);
