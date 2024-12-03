@@ -7,6 +7,7 @@ import challengesRoute from './routes/challenges';
 import usersRoute from './routes/users';
 import podsRoute from './routes/pods';
 import teamsRoute from './routes/teams';
+import analyticsRoute from './routes/analytics';
 
 const app = express();
 app.use(cors());
@@ -15,7 +16,7 @@ app.use('/challenges', challengesRoute);
 app.use('/users', usersRoute);
 app.use('/pods', podsRoute);
 app.use('/teams', teamsRoute);
-
+app.use('/analytics', analyticsRoute);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('API is running!');
