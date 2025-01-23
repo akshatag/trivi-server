@@ -6,10 +6,6 @@ const router = express.Router();
 
 // Get response rates for all users in the team over the last 30 days
 router.get('/response-rates/users', authenticateRequest, async (req: Request, res: Response) => {
-  if (req.user.role !== 'TEAM_ADMIN') {
-    res.status(401).json({ message: 'Unauthorized - Admin access required' });
-    return;
-  }
 
   try {
     const data = await pgpool.query(`
@@ -55,11 +51,6 @@ router.get('/response-rates/users', authenticateRequest, async (req: Request, re
 
 // Get response rates by pod over the last 30 days
 router.get('/response-rates/pods', authenticateRequest, async (req: Request, res: Response) => {
-  if (req.user.role !== 'TEAM_ADMIN') {
-    res.status(401).json({ message: 'Unauthorized - Admin access required' });
-    return;
-  }
-
   try {
     const data = await pgpool.query(`
       WITH pod_stats AS (
