@@ -31,7 +31,13 @@ process.on('SIGINT', async () => {
     await pgpool.end();
     console.log('PostgreSQL pool closed.');
     process.exit(0);
-  });
+});
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Only start the server if we're running directly (not being imported)
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+// Export the Express app for Vercel
+export default app;
