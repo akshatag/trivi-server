@@ -24,10 +24,11 @@ router.post('/init', authenticateRequest, async (req: Request, res: Response) =>
 
   if (!data) {
     
+    const userDomain = req.user.email.split('@')[1];
     const { data: teamData, error: teamError } = await supabase
       .from('teams')
-      .select('*')    
-      .eq('domain', req.user.email.split('@')[1])
+      .select('*')
+      .filter('domain', 'ilike', `%${userDomain}%`)
       .maybeSingle();
 
     if(!teamData){
@@ -42,7 +43,7 @@ router.post('/init', authenticateRequest, async (req: Request, res: Response) =>
 
     const { data: insertData, error: insertError } = await supabase
       .from('profiles')
-      .insert([{ id: req.user.id, email: req.user.email, team_id: teamData.id, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
+      .insert([{ id: req.user.id, email: req.user.email, team_id: teamData[0].id, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
 
     if (insertError) {
       console.error('Error inserting user:', insertError);

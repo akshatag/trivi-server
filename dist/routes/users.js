@@ -19,37 +19,43 @@ const db_1 = require("../utils/db");
 const router = express_1.default.Router();
 // Create a new user when the user first signs up. Just expects a session object in the request
 router.post('/init', auth_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const domain = req.user.email.split('@')[1];
+    console.log('INIT USER: ' + req.user.id);
     const { data, error } = yield supabase_1.supabase
-        .from('teams')
+        .from('profiles')
         .select('*')
-        .eq('domain', domain)
-        .single();
-    if (error) {
-        console.error('Error fetching team:', error);
-        res.status(500).json({ message: error.message });
+        .eq('id', req.user.id)
+        .maybeSingle();
+    if (data) {
+        console.log('user exists');
+        res.status(200).json({ message: 'user exists' });
         return;
     }
     if (!data) {
-        res.status(404).json({ message: 'Team not found' });
-        return;
-    }
-    const teamId = data.id;
-    console.log('id: ' + req.user.id);
-    console.log('email: ' + req.user.email);
-    console.log('teamId: ' + teamId);
-    // TODO: if there aren't other users in the team, set the role to 'TEAM_ADMIN'
-    const { data: insertData, error: insertError } = yield supabase_1.supabase
-        .from('profiles')
-        .insert([{ id: req.user.id, email: req.user.email, team_id: teamId, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
-    if (insertError) {
-        console.error('Error inserting user:', insertError);
-        res.status(500).json({ message: insertError.message });
-        return;
-    }
-    else {
-        res.status(201).json({ message: 'User created successfully!' });
-        return;
+        const userDomain = req.user.email.split('@')[1];
+        const { data: teamData, error: teamError } = yield supabase_1.supabase
+            .from('teams')
+            .select('*')
+            .filter('domain', 'ilike', `%${userDomain}%`)
+            .maybeSingle();
+        if (!teamData) {
+            console.log('Team not found');
+            res.status(404).json({ message: 'Team not found' });
+            return;
+        }
+        console.log('Inserting user...');
+        const { data: insertData, error: insertError } = yield supabase_1.supabase
+            .from('profiles')
+            .insert([{ id: req.user.id, email: req.user.email, team_id: teamData[0].id, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
+        if (insertError) {
+            console.error('Error inserting user:', insertError);
+            res.status(500).json({ message: insertError.message });
+            return;
+        }
+        else {
+            console.log('User created successfully!');
+            res.status(201).json({ message: 'User created successfully!' });
+            return;
+        }
     }
 }));
 // Update a user

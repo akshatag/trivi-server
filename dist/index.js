@@ -20,6 +20,7 @@ const challenges_1 = __importDefault(require("./routes/challenges"));
 const users_1 = __importDefault(require("./routes/users"));
 const pods_1 = __importDefault(require("./routes/pods"));
 const teams_1 = __importDefault(require("./routes/teams"));
+const analytics_1 = __importDefault(require("./routes/analytics"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -27,7 +28,7 @@ app.use('/challenges', challenges_1.default);
 app.use('/users', users_1.default);
 app.use('/pods', pods_1.default);
 app.use('/teams', teams_1.default);
-const PORT = process.env.PORT || 8080;
+app.use('/analytics', analytics_1.default);
 app.get('/', (req, res) => {
     res.send('API is running!');
 });
@@ -40,4 +41,5 @@ process.on('SIGINT', () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('PostgreSQL pool closed.');
     process.exit(0);
 }));
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

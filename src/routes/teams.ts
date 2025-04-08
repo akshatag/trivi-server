@@ -8,13 +8,14 @@ const router = express.Router();
 
 // Check if the domain the user is trying to join with exists
 router.get('/:domain', async (req: Request, res: Response) => {
-    const domain = req.params.domain;
+    const domain = req.params.domain.trim();
+
+    console.log('Checking domain:', domain);
 
     const { data, error } = await supabase
         .from('teams')
         .select('*')
-        .eq('domain', domain)
-        .single();
+        .filter('domain', 'ilike', `%${domain}%`);
 
     if(data) {
         res.status(200).json(data);

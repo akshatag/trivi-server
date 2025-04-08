@@ -37,8 +37,26 @@ router.get('/all', auth_1.authenticateRequest, (req, res) => __awaiter(void 0, v
         return;
     }
 }));
-// Update a pod
+// Add a pod
 router.post('/', auth_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.user.role != 'TEAM_ADMIN') {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+    }
+    const { data, error } = yield supabase_1.supabase
+        .from('pods')
+        .insert({ name: req.body.pod_name, team_id: req.user.team_id })
+        .select();
+    if (error) {
+        console.error('Error creating pod:', error);
+        res.status(500).json({ message: error.message });
+        return;
+    }
+    res.status(200).json({ message: 'Pod created successfully!' });
+    return;
+}));
+// Update a pod
+router.put('/', auth_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (req.user.role != 'TEAM_ADMIN') {
         res.status(401).json({ message: 'Unauthorized' });
         return;
