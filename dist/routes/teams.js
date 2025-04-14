@@ -23,13 +23,14 @@ router.get('/:domain', (req, res) => __awaiter(void 0, void 0, void 0, function*
         .from('teams')
         .select('*')
         .filter('domain', 'ilike', `%${domain}%`);
-    if (data) {
-        res.status(200).json(data);
+    if (error) {
+        res.status(500).json({ error: error.message });
         return;
     }
-    else {
+    if (!data || data.length === 0) {
         res.status(200).json(null);
         return;
     }
+    res.status(200).json(data[0]);
 }));
 exports.default = router;
