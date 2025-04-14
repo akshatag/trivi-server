@@ -22,7 +22,10 @@ const pods_1 = __importDefault(require("./routes/pods"));
 const teams_1 = __importDefault(require("./routes/teams"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: 'https://trivi.codeium.com',
+    credentials: true
+}));
 app.use(express_1.default.json());
 app.use('/challenges', challenges_1.default);
 app.use('/users', users_1.default);

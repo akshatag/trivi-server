@@ -10,7 +10,10 @@ import teamsRoute from './routes/teams';
 import analyticsRoute from './routes/analytics';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://trivi.codeium.com',
+  credentials: true
+}));
 app.use(express.json());
 app.use('/challenges', challengesRoute);
 app.use('/users', usersRoute);
