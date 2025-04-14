@@ -11,8 +11,10 @@ import analyticsRoute from './routes/analytics';
 
 const app = express();
 app.use(cors({
-  origin: 'https://trivi.codeium.com',
-  credentials: true
+  origin: ['https://trivi.codeium.com', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use('/challenges', challengesRoute);

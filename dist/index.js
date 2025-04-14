@@ -23,8 +23,10 @@ const teams_1 = __importDefault(require("./routes/teams"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
-    origin: 'https://trivi.codeium.com',
-    credentials: true
+    origin: ['https://trivi.codeium.com', 'http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express_1.default.json());
 app.use('/challenges', challenges_1.default);
