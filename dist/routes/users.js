@@ -45,7 +45,7 @@ router.post('/init', auth_1.authenticateRequest, (req, res) => __awaiter(void 0,
         console.log('Inserting user...');
         const { data: insertData, error: insertError } = yield supabase_1.supabase
             .from('profiles')
-            .insert([{ id: req.user.id, email: req.user.email, team_id: teamData[0].id, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
+            .insert([{ id: req.user.id, email: req.user.email, team_id: teamData.id, role: 'POD_MEMBER', name: req.user.email.split('@')[0] }]);
         if (insertError) {
             console.error('Error inserting user:', insertError);
             res.status(500).json({ message: insertError.message });
