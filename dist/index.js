@@ -23,7 +23,7 @@ const teams_1 = __importDefault(require("./routes/teams"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
-    origin: ['https://trivi.codeium.com', 'http://localhost:3000'],
+    origin: ['https://trivi.codeium.com', 'http://localhost:3000', 'https://trivi-client.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']

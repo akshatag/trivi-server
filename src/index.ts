@@ -11,7 +11,7 @@ import analyticsRoute from './routes/analytics';
 
 const app = express();
 app.use(cors({
-  origin: ['https://trivi.codeium.com', 'http://localhost:3000'],
+  origin: ['https://trivi.codeium.com', 'http://localhost:3000', 'https://trivi-client.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
